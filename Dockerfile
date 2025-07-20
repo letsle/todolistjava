@@ -1,16 +1,12 @@
-FROM ubuntu:latest AS build
-
-RUN apt-get update
-RUN apt-get install openjdk-17-jdk -y
-
+# Etapa 1: build do projeto com Maven e JDK 17
+FROM maven:3.8.5-openjdk-17 AS build
+WORKDIR /app
 COPY . .
+RUN mvn clean package -DskipTests
 
-RUN apt-get install maven -y
-
-RUN mvn clean install
-
+# Etapa 2: execução da aplicação
+FROM openjdk:17-jdk-slim
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
-
-COPY --from=build /target/todolist-0.0.1.jar app.jar
-
 ENTRYPOINT ["java", "-jar", "app.jar"]
